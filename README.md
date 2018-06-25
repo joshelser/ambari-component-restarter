@@ -1,6 +1,7 @@
 ## Setup
 
 ```
+# pip install virtualenv
 $ virtualenv e
 $ source e/bin/activate
 $ pip install -r requirements.txt
