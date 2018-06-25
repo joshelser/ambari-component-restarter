@@ -1,0 +1,4 @@
+get 'hbase:meta', ''
+get 'hbase:acl', ''
+get 'hbase:namespace', ''
+quit
