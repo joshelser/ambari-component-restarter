@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 
+import sys
 from ambari import start, stop, getHostsForComponent
 
-server='https://172.27.22.201:8443'
+if len(sys.argv) < 2:
+    print "Usage: restarter.py <ambari_url>"
+    return
+
+server=sys.argv[1]
 MASTER='HBASE_MASTER'
 RS='HBASE_REGIONSERVER'
 
