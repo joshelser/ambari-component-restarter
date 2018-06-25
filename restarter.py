@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys
+import sys, time
 from ambari import start, stop, getHostsForComponent
 
 if len(sys.argv) < 2:
