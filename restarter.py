@@ -4,8 +4,8 @@ import sys
 from ambari import start, stop, getHostsForComponent
 
 if len(sys.argv) < 2:
-    print "Usage: restarter.py <ambari_url>"
-    return
+    print "Usage: restarter.py https://ambari_host:port"
+    sys.exit(1)
 
 server=sys.argv[1]
 MASTER='HBASE_MASTER'
