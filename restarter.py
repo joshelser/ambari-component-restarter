@@ -17,10 +17,15 @@ regionservers = getHostsForComponent(RS, server)
 print "Masters=%s" % (masters)
 print "RegionServers=%s" % (regionservers)
 
-for master in masters:
-    stop(server, master, MASTER)
-    start(server, master, MASTER)
-
 for rs in regionservers:
     stop(server, rs, RS)
+
+for master in masters:
+    stop(server, master, MASTER)
+
+time.sleep(15)
+
+for master in masters:
+    start(server, master, MASTER)
+for rs in regionservers:
     start(server, rs, RS)
