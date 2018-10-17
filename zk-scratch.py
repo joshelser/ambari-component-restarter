@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import random, subprocess, sys, time
-from ambari import start, stop, getHostsForComponent
+from ambari import Ambari
 
 def get_state(server):
     # Try a few times to check on the state of a single ZK server
@@ -20,14 +20,14 @@ def get_state(server):
         time.sleep(1)
     raise Exception('Failed to find ZK server in expected mode', details)
 
-def timed_op(action, servers):
+def timed_op(action, ambari, servers):
     start_time = time.perf_counter()
-    action(servers)
+    action(ambari, servers)
     end_time = time.perf_counter()
     print('Operation Elapsed time', (end_time-start_time))
 
 def make_check_all_states():
-    def check_all_states(servers):
+    def check_all_states(ambari, servers):
         for server in servers:
             # Will throw an exception if bad
             state = get_state(server)
@@ -35,13 +35,13 @@ def make_check_all_states():
     return check_all_states
 
 def make_restart_servers():
-    def restart_servers(server):
+    def restart_servers(ambari, server):
         for server in servers:
             start_time = time.perf_counter()
 
             print("\nProcessing", server)
-            stop(ambari_server, server, component)
-            start(ambari_server, server, component)
+            ambari.stop(server, component)
+            ambari.start(server, component)
             # Will throw an exception if bad
             state = get_state(server)
             print("%s => %s" % (server, state))
@@ -51,13 +51,13 @@ def make_restart_servers():
     return restart_servers
 
 def make_async_restart_servers():
-    def restart_servers(server):
+    def restart_servers(ambari, server):
         for server in servers:
             start_time = time.perf_counter()
 
             print("\nProcessing", server)
-            stop(ambari_server, server, component)
-            start(ambari_server, server, component, async=True)
+            ambari.stop(server, component)
+            ambari.start(server, component, async=True)
             # Can't check state of ZK server if we don't wait for the service to start
 
             end_time = time.perf_counter()
@@ -69,20 +69,20 @@ if len(sys.argv) < 2:
     print("Usage: zk-restarter.py https://ambari_host:port")
     sys.exit(1)
 
-ambari_server=sys.argv[1]
+ambari=Ambari(sys.argv[1], 'hadoop')
 service='ZOOKEEPER'
 component='ZOOKEEPER_SERVER'
 
-servers = getHostsForComponent(service, component, ambari_server)
+servers = ambari.getHostsForComponent(service, component)
 random.shuffle(servers)
 
 print("ZooKeepers", servers)
 
 print("\nInitial ZK server states")
-timed_op(make_check_all_states(), servers)
+timed_op(make_check_all_states(), ambari, servers)
 
 print("\nRestarting ZK servers")
-timed_op(make_async_restart_servers(), servers)
+timed_op(make_async_restart_servers(), ambari, servers)
 
 print("\nFinal ZK server states")
-timed_op(make_check_all_states(), servers)
+timed_op(make_check_all_states(), ambari, servers)
