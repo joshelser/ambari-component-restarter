@@ -11,7 +11,7 @@ username='admin'
 password='admin'
 cluster='hadoop'
 
-def stop(ambari_url, host, component):
+def stop(ambari_url, host, component, async=False):
     u = "%s/api/v1/clusters/%s/hosts/%s/host_components/%s" % ( ambari_url, cluster, host, component )
     h = { 'X-Requested-By': 'ambari', 'Content-Type': 'text/plain' }
     d = '{"RequestInfo":{"context":"Stop %s on %s"}, "HostRoles": { "state": "INSTALLED" } }' %(component,host)
@@ -20,14 +20,14 @@ def stop(ambari_url, host, component):
     print("Initiating stop of %s at host %s" % (component, host))
     r = requests.put( u, data=d, headers=h, auth=a, verify=False )
     assert ( r.status_code == 200 or r.status_code == 202 ), "Failed to stop component %s on host %s, status=%d" % ( component, host, r.status_code )
-    if r.status_code == 202:
+    if r.status_code == 202 and not async:
         json_data = r.json()
         request_id = json_data['Requests']['id']
         status = wait_until_request_complete(request_id, ambari_url)
         assert status == 'COMPLETED', "Failed to stop component %s on host %s, status=%s" % (component, host, status)
     print("Completed stop of %s at host %s" % (component, host))
 
-def start(ambari_url, host, component):
+def start(ambari_url, host, component, async=False):
     u = "%s/api/v1/clusters/%s/hosts/%s/host_components/%s" % ( ambari_url, cluster, host, component )
     h = { 'X-Requested-By': 'ambari', 'Content-Type': 'text/plain' }
     d = '{"RequestInfo":{"context":"Stop %s on %s"}, "HostRoles": { "state": "STARTED" } }' %(component,host)
@@ -36,7 +36,7 @@ def start(ambari_url, host, component):
     print("Initiating start of %s at host %s" % (component, host))
     r = requests.put( u, data=d, headers=h, auth=a, verify=False )
     assert ( r.status_code == 200 or r.status_code == 202 ), "Failed to start component %s on host %s, status=%d" % ( component, host, r.status_code )
-    if r.status_code == 202:
+    if r.status_code == 202 and not async:
         json_data = r.json()
         request_id = json_data['Requests']['id']
         status = wait_until_request_complete(request_id, ambari_url)
