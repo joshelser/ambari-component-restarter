@@ -34,7 +34,7 @@ def make_check_all_states():
     return check_all_states
 
 def make_restart_servers():
-    def restart_servers(ambari, server):
+    def restart_servers(ambari, servers):
         for server in servers:
             start_time = time.perf_counter()
 
@@ -50,7 +50,7 @@ def make_restart_servers():
     return restart_servers
 
 def make_async_restart_servers():
-    def restart_servers(ambari, server):
+    def restart_servers(ambari, servers):
         for server in servers:
             start_time = time.perf_counter()
 
@@ -72,16 +72,18 @@ ambari=Ambari(sys.argv[1], 'hadoop')
 service='ZOOKEEPER'
 component='ZOOKEEPER_SERVER'
 
-servers = ambari.getHostsForComponent(service, component)
-random.shuffle(servers)
+all_servers = ambari.getHostsForComponent(service, component)
+followers = [s for s in all_servers if get_state(s) == 'follower']
+random.shuffle(followers)
 
-print("ZooKeepers", servers)
+print("All ZooKeeper Servers", all_servers)
+print("ZooKeeper followers", followers)
 
-print("\nInitial ZK server states")
-timed_op(make_check_all_states(), ambari, servers)
+#print("\nInitial ZK server states")
+#timed_op(make_check_all_states(), ambari, followers)
 
 print("\nRestarting ZK servers")
-timed_op(make_async_restart_servers(), ambari, servers)
+timed_op(make_async_restart_servers(), ambari, followers)
 
 print("\nFinal ZK server states")
-timed_op(make_check_all_states(), ambari, servers)
+timed_op(make_check_all_states(), ambari, followers)
